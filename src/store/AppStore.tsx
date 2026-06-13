@@ -104,8 +104,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
           'getData() · listCompanies() · listInvoices()',
           'createInvoice({ company, client, items:[{description,quantity,unitPrice}], number?, currency?, taxRate?, notes?, terms?, status? }) → saved invoice',
           'addCompany({ name, address?, country?, bankDetails?, ... }) → company',
+          'await getPdfBase64(idOrNumber?) → { filename, base64 }  (PDF bytes, for sending/saving)',
+          'await downloadPdf(idOrNumber?) → triggers a browser download',
           'importData(jsonOrObject) · exportData()',
-          'example: gogoInvoice.createInvoice({ company:"Personal", client:{name:"Acme"}, items:[{description:"Coaching",quantity:4,unitPrice:250}] })',
+          'example: const inv = gogoInvoice.createInvoice({ company:"Personal", client:{name:"Acme"}, items:[{description:"Coaching",quantity:4,unitPrice:250}] }); const pdf = await gogoInvoice.getPdfBase64(inv.number)',
         ].join('\n')
       },
       getData: () => dataRef.current,
@@ -163,6 +165,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
       saveInvoice(invoice: Invoice) {
         dispatch({ type: 'SAVE_INVOICE', invoice })
         return invoice
+      },
+      /** Resolve an invoice from an id, an invoice number, or an invoice object. */
+      resolveInvoice(ref: unknown): Invoice | undefined {
+        if (ref && typeof ref === 'object' && 'items' in (ref as object)) {
+          return ref as Invoice
+        }
+        const key = String(ref ?? '')
+        const inv = dataRef.current.invoices
+        return inv.find((i) => i.id === key) || inv.find((i) => i.number === key)
+      },
+      /**
+       * Render an invoice to PDF and return { filename, base64 } — the bytes,
+       * so an agent can write/send the file. `ref` = invoice id, number, or
+       * object; defaults to the most recently saved invoice.
+       */
+      async getPdfBase64(ref?: unknown) {
+        const invoice = this.resolveInvoice(ref) || dataRef.current.invoices[0]
+        if (!invoice) throw new Error('No invoice to render')
+        const { renderInvoicePdfBase64, invoiceFileName } =
+          await import('../pdf/download')
+        return {
+          filename: invoiceFileName(invoice),
+          base64: await renderInvoicePdfBase64(invoice),
+        }
+      },
+      /** Trigger a normal browser download for an invoice. */
+      async downloadPdf(ref?: unknown) {
+        const invoice = this.resolveInvoice(ref) || dataRef.current.invoices[0]
+        if (!invoice) throw new Error('No invoice to download')
+        const { downloadInvoicePdf } = await import('../pdf/download')
+        await downloadInvoicePdf(invoice)
+        return { downloaded: true }
       },
       importData(input: string | AppData) {
         const json = typeof input === 'string' ? input : JSON.stringify(input)
