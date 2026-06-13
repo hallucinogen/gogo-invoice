@@ -87,6 +87,14 @@ check(
   'listInvoices() sees it',
 )
 
+console.log('\nAgent grabs the PDF bytes for the invoice it just made:')
+const pdf = await api.getPdfBase64('API-001')
+check(
+  pdf.filename === 'API-001.pdf',
+  `getPdfBase64 returns the right file (${pdf.filename})`,
+)
+check(atob(pdf.base64.slice(0, 8)).startsWith('%PDF'), 'base64 decodes to a real PDF')
+
 console.log(
   bad ? '\n❌ API check failed' : '\n✅ agent API works by just opening the page',
 )

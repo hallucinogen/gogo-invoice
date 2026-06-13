@@ -96,6 +96,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Expose a small, stable automation API so agents (e.g. Claude Code via the
   // browser) can read and create invoices without driving the UI by hand.
   useEffect(() => {
+    // Optimistic upsert into the synchronous ref, matching the reducer, so a
+    // read right after a write (same tick) sees the change before re-render.
+    const applyInvoiceToRef = (invoice: Invoice) => {
+      const cur = dataRef.current
+      const exists = cur.invoices.some((i) => i.id === invoice.id)
+      dataRef.current = {
+        ...cur,
+        invoices: exists
+          ? cur.invoices.map((i) => (i.id === invoice.id ? invoice : i))
+          : [invoice, ...cur.invoices],
+      }
+    }
     const api = {
       version: 1,
       help() {
@@ -116,6 +128,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addCompany(input: Partial<Company> = {}) {
         const company = createCompany(input)
         dispatch({ type: 'ADD_COMPANY', company })
+        // Keep the API's synchronous view current (React re-render lags a tick).
+        dataRef.current = {
+          ...dataRef.current,
+          companies: [...dataRef.current.companies, company],
+        }
         return company
       },
       createInvoice(input: Record<string, unknown> = {}) {
@@ -159,10 +176,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
           notes: (input.notes as string) ?? base.notes,
           terms: (input.terms as string) ?? base.terms,
         }
+        applyInvoiceToRef(invoice)
         dispatch({ type: 'SAVE_INVOICE', invoice })
         return invoice
       },
       saveInvoice(invoice: Invoice) {
+        applyInvoiceToRef(invoice)
         dispatch({ type: 'SAVE_INVOICE', invoice })
         return invoice
       },
@@ -201,6 +220,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       importData(input: string | AppData) {
         const json = typeof input === 'string' ? input : JSON.stringify(input)
         const { data: next, dropped } = parseBackup(json)
+        dataRef.current = next
         dispatch({ type: 'REPLACE_DATA', data: next })
         return { imported: true, dropped }
       },
