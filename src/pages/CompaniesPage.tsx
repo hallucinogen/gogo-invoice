@@ -2,7 +2,13 @@ import { useState, type ChangeEvent } from 'react'
 import { useStore } from '../store/AppStore'
 import { Field } from '../components/Field'
 import { EditableNumber } from '../components/Editable'
-import { BuildingIcon, PlusIcon, TrashIcon, EditIcon } from '../components/icons'
+import {
+  BuildingIcon,
+  CopyIcon,
+  PlusIcon,
+  TrashIcon,
+  EditIcon,
+} from '../components/icons'
 import { CURRENCIES } from '../lib/currencies'
 import { COUNTRIES } from '../lib/countries'
 import { createCompany, suggestedNumber } from '../lib/factory'
@@ -62,6 +68,17 @@ export default function CompaniesPage() {
     if (isNew) addCompany(cleaned)
     else updateCompany(cleaned)
     setDraft(null)
+  }
+
+  const copyCompany = (c: Company) => {
+    const { id: _id, ...rest } = c
+    const clone = createCompany({
+      ...rest,
+      name: `${c.name || 'Company'} (copy)`,
+      nextNumber: 1,
+    })
+    addCompany(clone)
+    startEdit(clone)
   }
 
   const remove = (c: Company) => {
@@ -332,6 +349,14 @@ export default function CompaniesPage() {
                     onClick={() => startEdit(c)}
                   >
                     <EditIcon className="btn-icon" />
+                  </button>
+                  <button
+                    className="btn btn--ghost btn--sm"
+                    title="Make a copy"
+                    aria-label={`Copy ${c.name || 'company'}`}
+                    onClick={() => copyCompany(c)}
+                  >
+                    <CopyIcon className="btn-icon" />
                   </button>
                   <button
                     className="btn btn--danger btn--sm"

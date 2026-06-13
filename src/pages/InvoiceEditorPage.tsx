@@ -24,7 +24,7 @@ import {
   SaveIcon,
   TrashIcon,
 } from '../components/icons'
-import type { Company, Invoice, InvoiceStatus, LineItem } from '../types'
+import type { Company, Invoice, LineItem } from '../types'
 
 type Mode = 'new' | 'edit' | 'missing'
 const NEW_COMPANY = '__new__'
@@ -280,19 +280,6 @@ export default function InvoiceEditorPage() {
             ))}
           </select>
         </label>
-        <label className="doc-toolbar__field">
-          <span>Status</span>
-          <select
-            className="select"
-            value={draft.status}
-            onChange={(e) => set('status', e.target.value as InvoiceStatus)}
-            aria-label="Status"
-          >
-            <option value="draft">Draft</option>
-            <option value="sent">Sent</option>
-            <option value="paid">Paid</option>
-          </select>
-        </label>
         <label className="doc-toolbar__field doc-toolbar__field--accent">
           <span>Template</span>
           <select
@@ -319,11 +306,15 @@ export default function InvoiceEditorPage() {
 
         <span className="nav-spacer" />
         {toast ? <span className="tag">{toast}</span> : null}
-        <button className="btn btn--primary" onClick={() => save()}>
-          <SaveIcon className="btn-icon" /> Save
+        <button
+          className="btn btn--primary"
+          onClick={download}
+          title="Download the invoice as a PDF"
+        >
+          <DownloadIcon className="btn-icon" /> Download PDF
         </button>
-        <button className="btn" onClick={download} title="Download PDF">
-          <DownloadIcon className="btn-icon" /> PDF
+        <button className="btn" onClick={() => save()} title="Save to history">
+          <SaveIcon className="btn-icon" /> Save
         </button>
         {mode === 'edit' ? (
           <>

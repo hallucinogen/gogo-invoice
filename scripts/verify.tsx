@@ -70,7 +70,7 @@ async function main() {
   console.log('4. duplicate invoice → new id, draft, fresh number')
   const dup = duplicateInvoice(inv, company)
   assert(dup.id !== inv.id, 'new id')
-  assert(dup.status === 'draft', 'reset to draft')
+  assert(dup.status === 'sent', 'duplicate defaults to sent')
   assert(dup.items[0].id !== inv.items[0].id, 'item ids regenerated')
 
   console.log('5. zod backup round-trip')
