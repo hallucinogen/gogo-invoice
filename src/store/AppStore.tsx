@@ -105,6 +105,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           'createInvoice({ company, client, items:[{description,quantity,unitPrice}], number?, currency?, taxRate?, notes?, terms?, status? }) → saved invoice',
           'addCompany({ name, address?, country?, bankDetails?, ... }) → company',
           'importData(jsonOrObject) · exportData()',
+          'example: gogoInvoice.createInvoice({ company:"Personal", client:{name:"Acme"}, items:[{description:"Coaching",quantity:4,unitPrice:250}] })',
         ].join('\n')
       },
       getData: () => dataRef.current,
@@ -172,6 +173,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       exportData: () => dataRef.current,
     }
     ;(window as unknown as { gogoInvoice: typeof api }).gogoInvoice = api
+    // Announce the API so an agent that just opens the page (and reads the
+    // console) discovers it without any docs.
+    console.info(
+      '%c[Gogo Invoice]%c automation API ready. Run window.gogoInvoice.help()\n%s',
+      'font-weight:700;color:#1d5b48',
+      'color:inherit',
+      api.help(),
+    )
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
