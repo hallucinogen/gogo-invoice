@@ -8,6 +8,8 @@ interface TextProps {
   className?: string
   style?: CSSProperties
   ariaLabel?: string
+  /** id of a <datalist> to wire up native autocomplete suggestions. */
+  list?: string
 }
 
 /** A single-line input styled to read as plain invoice text. */
@@ -19,6 +21,7 @@ export function EditableText({
   className,
   style,
   ariaLabel,
+  list,
 }: TextProps) {
   return (
     <input
@@ -27,6 +30,7 @@ export function EditableText({
       value={value}
       placeholder={placeholder}
       aria-label={ariaLabel ?? placeholder}
+      list={list}
       onChange={(e) => onChange(e.target.value)}
       onBlur={(e) => onCommit?.(e.target.value)}
     />

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useStore } from '../store/AppStore'
 import { EditableArea, EditableNumber, EditableText } from '../components/Editable'
@@ -39,6 +39,7 @@ export default function InvoiceEditorPage() {
 
   const {
     companies,
+    invoices,
     getInvoice,
     getCompany,
     addCompany,
@@ -47,6 +48,18 @@ export default function InvoiceEditorPage() {
     deleteInvoice,
     bumpCompanyNumber,
   } = useStore()
+
+  // Unique clients seen across saved invoices (most recent wins), for autofill.
+  const savedClients = useMemo(() => {
+    const byName = new Map<string, Invoice['client']>()
+    for (const inv of invoices) {
+      const name = inv.client.name.trim()
+      if (name && !byName.has(name.toLowerCase())) {
+        byName.set(name.toLowerCase(), inv.client)
+      }
+    }
+    return [...byName.values()]
+  }, [invoices])
 
   const [draft, setDraft] = useState<Invoice | null>(null)
   const [mode, setMode] = useState<Mode>('new')
@@ -104,6 +117,17 @@ export default function InvoiceEditorPage() {
     setDraft((d) => (d ? { ...d, [key]: value } : d))
   const setClient = (key: keyof Invoice['client'], value: string) =>
     setDraft((d) => (d ? { ...d, client: { ...d.client, [key]: value } } : d))
+
+  // When the typed/picked client name exactly matches a previously-saved
+  // client, autofill the rest of their details.
+  const onClientName = (value: string) => {
+    const match = savedClients.find(
+      (cl) => cl.name.toLowerCase() === value.trim().toLowerCase(),
+    )
+    setDraft((d) =>
+      d ? { ...d, client: match ? { ...match } : { ...d.client, name: value } } : d,
+    )
+  }
 
   // Edit the header on the invoice (live snapshot)…
   const setCompanyField = (key: keyof Invoice['company'], value: string | undefined) =>
@@ -249,87 +273,94 @@ export default function InvoiceEditorPage() {
   return (
     <div className="editor-page">
       <div className="doc-toolbar">
-        <label className="doc-toolbar__field">
-          <span>Company</span>
-          <select
-            className="select"
-            value={draft.companyId}
-            onChange={(e) => changeCompany(e.target.value)}
-            aria-label="Company for this invoice"
-          >
-            {companies.map((co) => (
-              <option key={co.id} value={co.id}>
-                {co.name || 'Untitled company'}
-              </option>
-            ))}
-            <option value={NEW_COMPANY}>+ New company…</option>
-          </select>
-        </label>
-        <label className="doc-toolbar__field">
-          <span>Currency</span>
-          <select
-            className="select"
-            value={draft.currency}
-            onChange={(e) => set('currency', e.target.value)}
-            aria-label="Currency"
-          >
-            {CURRENCIES.map((cur) => (
-              <option key={cur.code} value={cur.code}>
-                {cur.code} — {cur.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="doc-toolbar__field doc-toolbar__field--accent">
-          <span>Template</span>
-          <select
-            className="select"
-            value=""
-            aria-label="Start from a line-item template"
-            onChange={(e) => {
-              if (e.target.value) applyTemplate(e.target.value)
-              e.target.value = ''
-            }}
-          >
-            <option value="">Pick a template…</option>
-            {TEMPLATE_GROUPS.map((group) => (
-              <optgroup key={group} label={group}>
-                {ITEM_TEMPLATES.filter((t) => t.group === group).map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.label}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </label>
-
-        <span className="nav-spacer" />
-        {toast ? <span className="tag">{toast}</span> : null}
-        <button
-          className="btn btn--primary"
-          onClick={download}
-          title="Download the invoice as a PDF"
-        >
-          <DownloadIcon className="btn-icon" /> Download PDF
-        </button>
-        <button className="btn" onClick={() => save()} title="Save to history">
-          <SaveIcon className="btn-icon" /> Save
-        </button>
-        {mode === 'edit' ? (
-          <>
-            <button
-              className="btn btn--ghost"
-              title="Duplicate as a new invoice"
-              onClick={() => navigate(`/invoice/new?from=${draft.id}`)}
+        <div className="doc-toolbar__fields">
+          <label className="doc-toolbar__field">
+            <span>Company</span>
+            <select
+              className="select"
+              value={draft.companyId}
+              onChange={(e) => changeCompany(e.target.value)}
+              aria-label="Company for this invoice"
             >
-              <CopyIcon className="btn-icon" />
-            </button>
-            <button className="btn btn--danger" title="Delete invoice" onClick={onDelete}>
-              <TrashIcon className="btn-icon" />
-            </button>
-          </>
-        ) : null}
+              {companies.map((co) => (
+                <option key={co.id} value={co.id}>
+                  {co.name || 'Untitled company'}
+                </option>
+              ))}
+              <option value={NEW_COMPANY}>+ New company…</option>
+            </select>
+          </label>
+          <label className="doc-toolbar__field">
+            <span>Currency</span>
+            <select
+              className="select"
+              value={draft.currency}
+              onChange={(e) => set('currency', e.target.value)}
+              aria-label="Currency"
+            >
+              {CURRENCIES.map((cur) => (
+                <option key={cur.code} value={cur.code}>
+                  {cur.code} — {cur.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="doc-toolbar__field doc-toolbar__field--accent">
+            <span>Template</span>
+            <select
+              className="select"
+              value=""
+              aria-label="Start from a line-item template"
+              onChange={(e) => {
+                if (e.target.value) applyTemplate(e.target.value)
+                e.target.value = ''
+              }}
+            >
+              <option value="">Pick a template…</option>
+              {TEMPLATE_GROUPS.map((group) => (
+                <optgroup key={group} label={group}>
+                  {ITEM_TEMPLATES.filter((t) => t.group === group).map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        <div className="doc-toolbar__actions">
+          {toast ? <span className="tag">{toast}</span> : null}
+          <button
+            className="btn btn--primary"
+            onClick={download}
+            title="Download the invoice as a PDF"
+          >
+            <DownloadIcon className="btn-icon" /> Download PDF
+          </button>
+          <button className="btn" onClick={() => save()} title="Save to history">
+            <SaveIcon className="btn-icon" /> Save
+          </button>
+          {mode === 'edit' ? (
+            <>
+              <button
+                className="btn btn--ghost"
+                title="Duplicate as a new invoice"
+                onClick={() => navigate(`/invoice/new?from=${draft.id}`)}
+              >
+                <CopyIcon className="btn-icon" />
+              </button>
+              <button
+                className="btn btn--danger"
+                title="Delete invoice"
+                onClick={onDelete}
+              >
+                <TrashIcon className="btn-icon" />
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
 
       <div className="paper paper--edit">
@@ -432,8 +463,16 @@ export default function InvoiceEditorPage() {
               value={draft.client.name}
               placeholder="e.g. Braid Research, Inc."
               ariaLabel="Client name"
-              onChange={(v) => setClient('name', v)}
+              list={savedClients.length ? 'saved-clients' : undefined}
+              onChange={onClientName}
             />
+            {savedClients.length ? (
+              <datalist id="saved-clients">
+                {savedClients.map((cl) => (
+                  <option key={cl.name} value={cl.name} />
+                ))}
+              </datalist>
+            ) : null}
             <EditableArea
               className="paper__muted"
               value={draft.client.address}
