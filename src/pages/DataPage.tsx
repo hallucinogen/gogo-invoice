@@ -1,5 +1,4 @@
 import { useState, type ChangeEvent } from 'react'
-import { saveAs } from 'file-saver'
 import { useStore } from '../store/AppStore'
 import { parseBackup, serializeBackup } from '../store/persistence'
 import { DownloadIcon, UploadIcon, TrashIcon, DatabaseIcon } from '../components/icons'
@@ -10,10 +9,11 @@ export default function DataPage() {
   const { data, companies, invoices, replaceData, clearAll } = useStore()
   const [msg, setMsg] = useState<Msg>(null)
 
-  const exportBackup = () => {
+  const exportBackup = async () => {
     const json = serializeBackup(data)
     const blob = new Blob([json], { type: 'application/json' })
     const date = new Date().toISOString().slice(0, 10)
+    const { saveAs } = await import('file-saver')
     saveAs(blob, `gogo-invoice-backup-${date}.json`)
     setMsg({ kind: 'ok', text: 'Backup downloaded.' })
   }

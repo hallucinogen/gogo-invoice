@@ -499,32 +499,37 @@ export default function InvoiceEditorPage() {
             <span className="r">Amount</span>
             <span />
           </div>
-          {draft.items.map((it) => (
-            <div className="paper__items-row" key={it.id}>
+          {draft.items.map((it, i) => (
+            <div
+              className="paper__items-row"
+              key={it.id}
+              role="group"
+              aria-label={`Item ${i + 1}`}
+            >
               <EditableText
                 value={it.description}
                 placeholder="e.g. Web development — June 2026"
-                ariaLabel="Item description"
+                ariaLabel={`Item ${i + 1} description`}
                 onChange={(v) => updateItem(it.id, { description: v })}
               />
               <EditableNumber
                 className="r"
                 value={it.quantity}
-                ariaLabel="Quantity"
+                ariaLabel={`Item ${i + 1} quantity`}
                 onChange={(n) => updateItem(it.id, { quantity: n })}
               />
               <EditableNumber
                 className="r"
                 value={it.unitPrice}
-                ariaLabel="Unit price"
+                ariaLabel={`Item ${i + 1} unit price`}
                 onChange={(n) => updateItem(it.id, { unitPrice: n })}
               />
               <span className="r amount">{money(lineTotal(it))}</span>
               <button
                 type="button"
                 className="row-remove"
-                title="Remove item"
-                aria-label="Remove item"
+                title={`Remove item ${i + 1}`}
+                aria-label={`Remove item ${i + 1}`}
                 onClick={() => removeItem(it.id)}
               >
                 ×

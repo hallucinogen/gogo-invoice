@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "verify": "tsx scripts/verify.tsx && tsx scripts/render-check.tsx && tsx scripts/save-check.tsx && tsx scripts/api-check.tsx",
+    "verify": "tsx scripts/verify.tsx && tsx scripts/render-check.tsx && tsx scripts/save-check.tsx && tsx scripts/api-check.tsx && tsx scripts/ui-drive-check.tsx",
     "format": "prettier -w .",
     "format:check": "prettier -c ."
   },

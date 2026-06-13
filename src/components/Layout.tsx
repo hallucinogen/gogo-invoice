@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { useStore } from '../store/AppStore'
 import { ThemeToggle } from './ThemeToggle'
 
-const BASE_URL = import.meta.env.BASE_URL
+const BASE_URL = import.meta.env?.BASE_URL ?? '/'
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { saveError } = useStore()

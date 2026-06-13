@@ -21,7 +21,12 @@ Key methods (all data persists to localStorage and shows in the History view):
 - `createInvoice({ company, client, items, number?, currency?, taxRate?, discountValue?, shipping?, notes?, terms?, status? })` → saved invoice.
   - `company`: company name (matched case-insensitively) or `companyId`. Created if missing.
   - `client`: `{ name, address?, country?, email?, phone? }`.
-  - `items`: array of `{ description, quantity, unitPrice }`.
+  - `items`: array of `{ description, quantity, unitPrice }`. `unitPrice` is in major
+    currency units (e.g. dollars, not cents).
+  - Returns the saved invoice, including `{ id, number }`. Omitted optionals default to:
+    `number` = next auto number for the company, `issueDate` = today, `dueDate` = +14 days,
+    `taxRate` = 0, `currency` = the company default. `createAndDownload` / `createAndGetPdf`
+    take the same params as `createInvoice`.
 - `await getPdfBase64(idOrNumber?)` → `{ filename, base64 }` (PDF bytes, to email/attach).
 - `await downloadPdf(idOrNumber?)` → triggers a browser download (lands in ~/Downloads).
 - `await createAndDownload({ ...sameAsCreateInvoice })` → create + download in one call.
@@ -59,9 +64,14 @@ target by role + name (e.g. Playwright `getByRole`/`getByLabel`):
   "Invoice number", "Issue date", "Due date".
 - Bill To: "Client name" (autocompletes from past clients), "Client address and contact",
   "Client country".
-- Line items: each row has "Item description", "Quantity", "Unit price"; a
-  "Remove item" button. Below the table: an "Add item" button and a
-  "Start from a line-item template" select. Toggle "+ Discount" / "+ Shipping".
+- Line items: the editor opens with ONE empty item row; clicking "Add item"
+  appends a new row at the end. Each row's controls are scoped by row number, so
+  they are unique: "Item 1 description" / "Item 1 quantity" / "Item 1 unit price"
+  (and "Remove item 1"), "Item 2 description", etc. Each row is also a
+  role="group" with name "Item N". So the Nth item = the row with those "Item N …"
+  labels; to add the Nth item, click "Add item" until N rows exist, then fill
+  "Item N …". Below the table: an "Add item" button and a "Start from a
+  line-item template" select. Toggle "+ Discount" / "+ Shipping".
 - Totals: "Tax label", "Tax rate percent", and (when shown) "Discount value", "Shipping amount".
 - Notes section: "Notes", "Terms", "Payment details".
 
