@@ -1,0 +1,4 @@
+dist
+dev-dist
+pnpm-lock.yaml
+*.md
