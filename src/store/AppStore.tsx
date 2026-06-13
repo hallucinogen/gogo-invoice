@@ -247,12 +247,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       exportData: () => dataRef.current,
     }
     ;(window as unknown as { gogoInvoice: typeof api }).gogoInvoice = api
-    // Announce the API so an agent that just opens the page (and reads the
-    // console) discovers it without any docs.
+    // Discoverable markers so an agent that just opens the page finds the API
+    // without reading the repo: a DOM attribute (visible to DOM/a11y crawlers)
+    // and a console banner (read by browser-driving harnesses).
+    document.documentElement.setAttribute('data-agent-api', 'window.gogoInvoice')
+    const base = import.meta.env?.BASE_URL ?? '/'
     console.info(
-      '%c[Gogo Invoice]%c automation API ready. Run window.gogoInvoice.help()\n%s',
+      '%c[Gogo Invoice]%c automation API ready. Run window.gogoInvoice.help() · docs: %sllms.txt\n%s',
       'font-weight:700;color:#1d5b48',
       'color:inherit',
+      base,
       api.help(),
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps

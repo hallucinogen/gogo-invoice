@@ -12,7 +12,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.svg', 'icon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'icon.svg', 'apple-touch-icon.png', 'llms.txt'],
       manifest: {
         name: 'Gogo Invoice',
         short_name: 'Invoice',

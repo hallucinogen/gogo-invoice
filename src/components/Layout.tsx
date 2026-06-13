@@ -51,6 +51,10 @@ export default function Layout({ children }: { children: ReactNode }) {
           rel="noreferrer noopener"
         >
           Open source on GitHub
+        </a>{' '}
+        ·{' '}
+        <a href={`${BASE_URL}llms.txt`} target="_blank" rel="noreferrer noopener">
+          Automation / agent API
         </a>
       </footer>
     </div>

@@ -1,0 +1,78 @@
+# Gogo Invoice
+
+> Offline-first invoice generator. No backend — all data lives in the browser
+> (localStorage). This file tells AI agents / automation how to operate the app.
+
+Live app: https://hallucinogen.github.io/gogo-invoice/
+Source: https://github.com/hallucinogen/gogo-invoice
+
+## Two ways to operate
+
+### 1. JavaScript API (recommended for agents)
+
+When the page is open, a global `window.gogoInvoice` is available. Run
+`window.gogoInvoice.help()` for the live method list. It is also announced in the
+browser console on load: `[Gogo Invoice] automation API ready`.
+
+Key methods (all data persists to localStorage and shows in the History view):
+
+- `listCompanies()` / `listInvoices()` / `getData()` — read current state.
+- `addCompany({ name, address?, country?, email?, phone?, bankDetails?, defaultCurrency? })` → company.
+- `createInvoice({ company, client, items, number?, currency?, taxRate?, discountValue?, shipping?, notes?, terms?, status? })` → saved invoice.
+  - `company`: company name (matched case-insensitively) or `companyId`. Created if missing.
+  - `client`: `{ name, address?, country?, email?, phone? }`.
+  - `items`: array of `{ description, quantity, unitPrice }`.
+- `await getPdfBase64(idOrNumber?)` → `{ filename, base64 }` (PDF bytes, to email/attach).
+- `await downloadPdf(idOrNumber?)` → triggers a browser download (lands in ~/Downloads).
+- `await createAndDownload({ ...sameAsCreateInvoice })` → create + download in one call.
+- `await createAndGetPdf({ ... })` → `{ invoice, filename, base64 }` in one call.
+- `importData(jsonOrObject)` / `exportData()` — full backup restore / dump.
+
+Example — create an invoice and download its PDF:
+
+```js
+await window.gogoInvoice.createAndDownload({
+  company: 'Acme Studio',
+  client: { name: 'Globex Inc.', country: 'United States' },
+  currency: 'USD',
+  items: [
+    { description: 'Design work (hours)', quantity: 10, unitPrice: 120 },
+    { description: 'Hosting (pass-through)', quantity: 1, unitPrice: 48 },
+  ],
+  taxRate: 0,
+})
+```
+
+### 2. The UI (for Playwright / computer-use agents)
+
+Single-page app, hash routing. Pages: `#/` (new invoice editor), `#/history`,
+`#/companies`, `#/backup`. The app opens directly on a fillable invoice with a
+default company, so no setup is required.
+
+The invoice is edited in place (WYSIWYG). Every control has an accessible name —
+target by role + name (e.g. Playwright `getByRole`/`getByLabel`):
+
+- Top toolbar selects: "Company for this invoice", "Currency",
+  "Start from a line-item template".
+- Buttons: "Download PDF", "Save".
+- Header fields: "Company name", "Your address and contact details", "Your country",
+  "Invoice number", "Issue date", "Due date".
+- Bill To: "Client name" (autocompletes from past clients), "Client address and contact",
+  "Client country".
+- Line items: each row has "Item description", "Quantity", "Unit price"; a
+  "Remove item" button. Below the table: an "Add item" button and a
+  "Start from a line-item template" select. Toggle "+ Discount" / "+ Shipping".
+- Totals: "Tax label", "Tax rate percent", and (when shown) "Discount value", "Shipping amount".
+- Notes section: "Notes", "Terms", "Payment details".
+
+To add a line item: click the "Add item" button, then fill the new row's
+"Item description", "Quantity", "Unit price". To start from a profession template
+(software, IT pass-through, coaching, accounting, finance, etc.), pick one from the
+"Start from a line-item template" select. Click "Save" to store it (History), or
+"Download PDF" to export.
+
+## Notes
+
+- No network calls; works offline after first load (installable PWA).
+- Data shape is validated with Zod; a single bad record never wipes the rest.
+- To move data between browsers/devices: `exportData()` here, `importData()` there.
