@@ -94,6 +94,35 @@ src/
   pages/      Editor (the WYSIWYG invoice), History, Companies, Backup
 ```
 
+## Automation API (for agents / Claude Code)
+
+The app exposes a small global, `window.gogoInvoice`, so an agent driving the page
+(e.g. Claude Code via the Chrome extension) can read and create invoices without
+filling the form by hand. Run `window.gogoInvoice.help()` in the console for usage.
+
+```js
+// Create + save an invoice (appears in History immediately, persisted locally)
+window.gogoInvoice.createInvoice({
+  company: 'Gogo Coaching Service', // matched by name; created if missing
+  number: 'INTV-FAS-002',
+  client: { name: 'Braid Research, Inc.', country: 'United States' },
+  currency: 'USD',
+  items: [
+    { description: 'Coaching session', quantity: 4, unitPrice: 250 },
+    { description: 'Cloud hosting (pass-through)', quantity: 1, unitPrice: 48 },
+  ],
+  taxRate: 0,
+  notes: 'Thank you!',
+})
+
+window.gogoInvoice.listInvoices() // read everything
+window.gogoInvoice.exportData()   // full backup object
+window.gogoInvoice.importData(backupJsonOrObject)
+```
+
+Everything is plain `localStorage` under the key `gogo-invoice:v1` (validated with
+Zod), so you can also export/import the JSON backup directly.
+
 ## License
 
 [MIT](LICENSE) © 2026 hallucinogen

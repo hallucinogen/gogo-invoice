@@ -13,14 +13,22 @@ import {
   SearchIcon,
   TrashIcon,
 } from '../components/icons'
-import type { Invoice } from '../types'
+import type { Invoice, InvoiceStatus } from '../types'
+
+const STATUS_ORDER: InvoiceStatus[] = ['draft', 'sent', 'paid']
 
 export default function InvoiceListPage() {
-  const { invoices, companies, deleteInvoice } = useStore()
+  const { invoices, companies, deleteInvoice, saveInvoice } = useStore()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [companyFilter, setCompanyFilter] = useState('all')
   const [notice, setNotice] = useState('')
+
+  const cycleStatus = (inv: Invoice) => {
+    const next =
+      STATUS_ORDER[(STATUS_ORDER.indexOf(inv.status) + 1) % STATUS_ORDER.length]
+    saveInvoice({ ...inv, status: next, updatedAt: new Date().toISOString() })
+  }
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -125,7 +133,15 @@ export default function InvoiceListPage() {
                 const total = computeTotals(inv).total
                 return (
                   <div className="invoice-row" key={inv.id}>
-                    <span className={`badge badge--${inv.status}`}>{inv.status}</span>
+                    <button
+                      type="button"
+                      className={`badge badge--${inv.status} badge-button`}
+                      title="Click to change status (Draft → Sent → Paid)"
+                      aria-label={`Status: ${inv.status}. Click to change.`}
+                      onClick={() => cycleStatus(inv)}
+                    >
+                      {inv.status}
+                    </button>
                     <div className="invoice-row__meta">
                       <Link to={`/invoice/${inv.id}`} className="invoice-row__num">
                         {inv.number || 'No number'}

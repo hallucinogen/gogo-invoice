@@ -10,7 +10,9 @@ import {
   type ReactNode,
 } from 'react'
 import type { AppData, Company, Invoice, Theme } from '../types'
-import { defaultData, loadData, saveData } from './persistence'
+import { defaultData, loadData, parseBackup, saveData } from './persistence'
+import { createCompany, createInvoiceForCompany } from '../lib/factory'
+import { uid } from '../lib/id'
 
 type Action =
   | { type: 'ADD_COMPANY'; company: Company }
@@ -88,6 +90,90 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [data, dispatch] = useReducer(reducer, undefined, loadData)
   const [saveError, setSaveError] = useState(false)
   const isInitialLoad = useRef(true)
+  const dataRef = useRef(data)
+  dataRef.current = data
+
+  // Expose a small, stable automation API so agents (e.g. Claude Code via the
+  // browser) can read and create invoices without driving the UI by hand.
+  useEffect(() => {
+    const api = {
+      version: 1,
+      help() {
+        return [
+          'window.gogoInvoice — automation API',
+          'getData() · listCompanies() · listInvoices()',
+          'createInvoice({ company, client, items:[{description,quantity,unitPrice}], number?, currency?, taxRate?, notes?, terms?, status? }) → saved invoice',
+          'addCompany({ name, address?, country?, bankDetails?, ... }) → company',
+          'importData(jsonOrObject) · exportData()',
+        ].join('\n')
+      },
+      getData: () => dataRef.current,
+      listCompanies: () => dataRef.current.companies,
+      listInvoices: () => dataRef.current.invoices,
+      addCompany(input: Partial<Company> = {}) {
+        const company = createCompany(input)
+        dispatch({ type: 'ADD_COMPANY', company })
+        return company
+      },
+      createInvoice(input: Record<string, unknown> = {}) {
+        const d = dataRef.current
+        const companyId = typeof input.companyId === 'string' ? input.companyId : ''
+        const companyName = typeof input.company === 'string' ? input.company : ''
+        let company: Company | undefined =
+          (companyId ? d.companies.find((c) => c.id === companyId) : undefined) ||
+          (companyName
+            ? d.companies.find((c) => c.name.toLowerCase() === companyName.toLowerCase())
+            : undefined) ||
+          d.companies[0]
+        if (!company) {
+          company = createCompany({ name: companyName || 'Personal' })
+          dispatch({ type: 'ADD_COMPANY', company })
+        }
+        const base = createInvoiceForCompany(company)
+        const itemsIn = Array.isArray(input.items) ? input.items : null
+        const invoice: Invoice = {
+          ...base,
+          number: (input.number as string) ?? base.number,
+          currency: (input.currency as string) ?? base.currency,
+          status: (input.status as Invoice['status']) ?? base.status,
+          issueDate: (input.issueDate as string) ?? base.issueDate,
+          dueDate: (input.dueDate as string) ?? base.dueDate,
+          client: { ...base.client, ...((input.client as object) || {}) },
+          items: itemsIn
+            ? itemsIn.map((it: Record<string, unknown>) => ({
+                id: uid(),
+                description: String(it.description ?? ''),
+                quantity: Number(it.quantity ?? 1) || 0,
+                unitPrice: Number(it.unitPrice ?? 0) || 0,
+              }))
+            : base.items,
+          taxRate: Number(input.taxRate ?? base.taxRate) || 0,
+          taxLabel: (input.taxLabel as string) ?? base.taxLabel,
+          discountType:
+            (input.discountType as Invoice['discountType']) ?? base.discountType,
+          discountValue: Number(input.discountValue ?? base.discountValue) || 0,
+          shipping: Number(input.shipping ?? base.shipping) || 0,
+          notes: (input.notes as string) ?? base.notes,
+          terms: (input.terms as string) ?? base.terms,
+        }
+        dispatch({ type: 'SAVE_INVOICE', invoice })
+        return invoice
+      },
+      saveInvoice(invoice: Invoice) {
+        dispatch({ type: 'SAVE_INVOICE', invoice })
+        return invoice
+      },
+      importData(input: string | AppData) {
+        const json = typeof input === 'string' ? input : JSON.stringify(input)
+        const { data: next, dropped } = parseBackup(json)
+        dispatch({ type: 'REPLACE_DATA', data: next })
+        return { imported: true, dropped }
+      },
+      exportData: () => dataRef.current,
+    }
+    ;(window as unknown as { gogoInvoice: typeof api }).gogoInvoice = api
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Persist on change — but skip the first run, which would just echo the data
   // we just loaded back to storage (twice under StrictMode).
