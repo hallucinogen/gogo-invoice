@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
+import { useStore } from '../store/AppStore'
 import { ThemeToggle } from './ThemeToggle'
 
 const BASE_URL = import.meta.env.BASE_URL
 
 export default function Layout({ children }: { children: ReactNode }) {
+  const { saveError } = useStore()
   return (
     <div className="app">
       <header className="nav">
@@ -15,7 +17,10 @@ export default function Layout({ children }: { children: ReactNode }) {
           </NavLink>
           <nav className="nav-links">
             <NavLink to="/" end className="nav-link">
-              Invoices
+              New invoice
+            </NavLink>
+            <NavLink to="/history" className="nav-link">
+              History
             </NavLink>
             <NavLink to="/companies" className="nav-link">
               Companies
@@ -28,7 +33,16 @@ export default function Layout({ children }: { children: ReactNode }) {
           <ThemeToggle />
         </div>
       </header>
+
+      {saveError ? (
+        <div className="save-error" role="alert">
+          Couldn't save your changes — browser storage may be full. Export a backup, then
+          remove a large logo or some old invoices.
+        </div>
+      ) : null}
+
       <main className="main">{children}</main>
+
       <footer className="footer">
         Gogo Invoice · your data stays on this device ·{' '}
         <a

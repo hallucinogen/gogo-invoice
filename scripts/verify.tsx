@@ -78,18 +78,29 @@ async function main() {
   data.companies = [company]
   data.invoices = [inv, dup]
   const json = serializeBackup(data)
-  const restored = parseBackup(json)
+  const { data: restored, dropped } = parseBackup(json)
   assert(restored.companies.length === 1, 'company restored')
   assert(restored.invoices.length === 2, 'invoices restored')
+  assert(dropped === 0, 'no records dropped from a clean backup')
   assert(appDataSchema.safeParse(restored).success, 'restored data validates')
 
-  console.log('6. zod rejects garbage / fills partials')
+  console.log('6. zod fills partials + salvages valid records')
   const partial = appDataSchema.safeParse({ companies: [], invoices: [] })
   assert(partial.success, 'partial data fills defaults')
   assert(
     partial.success && partial.data.settings.theme === 'system',
     'theme default applied',
   )
+  // One malformed invoice must not discard the good ones.
+  const mixed = JSON.stringify({
+    version: 1,
+    companies: [company],
+    invoices: [inv, { id: 'broken', companyId: 'x' /* missing required fields */ }],
+    settings: { theme: 'system' },
+  })
+  const salvage = parseBackup(mixed)
+  assert(salvage.data.invoices.length === 1, 'kept the valid invoice')
+  assert(salvage.dropped === 1, 'dropped only the malformed invoice')
 
   console.log('7. render PDF (the risky bit)')
   const buf = await renderToBuffer(<InvoiceDocument invoice={inv} />)

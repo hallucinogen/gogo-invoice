@@ -27,14 +27,16 @@ type TotalsInput = Pick<
 >
 
 export function computeTotals(inv: TotalsInput): Totals {
-  const subtotal = round2(
-    inv.items.reduce((sum, it) => sum + (it.quantity || 0) * (it.unitPrice || 0), 0),
-  )
+  // Sum the already-rounded per-line totals so the printed line amounts always
+  // add up to the subtotal shown on the invoice.
+  const subtotal = round2(inv.items.reduce((sum, it) => sum + lineTotal(it), 0))
 
   const discountAmount = round2(
     discountFor(subtotal, inv.discountType, inv.discountValue),
   )
-  const taxableBase = round2(Math.max(subtotal - discountAmount, 0))
+  // Let the base follow the subtotal (no floor) so a credit-style negative
+  // subtotal stays internally consistent rather than showing total = 0.
+  const taxableBase = round2(subtotal - discountAmount)
   const taxAmount = round2(taxableBase * (clamp(inv.taxRate || 0, 0, 100000) / 100))
   const shipping = round2(Math.max(inv.shipping || 0, 0))
   const total = round2(taxableBase + taxAmount + shipping)

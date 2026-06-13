@@ -108,6 +108,9 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
   const totals = computeTotals(invoice)
   const c = invoice.company
   const money = (n: number) => formatCurrency(n, invoice.currency)
+  // react-pdf's <Image> only decodes PNG/JPEG; never pass an SVG (or other) data URL.
+  const logoOk =
+    typeof c.logo === 'string' && /^data:image\/(png|jpe?g);base64,/.test(c.logo)
 
   const companyLines = [
     c.address,
@@ -128,7 +131,7 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
       <Page size="A4" style={styles.page}>
         <View style={styles.top}>
           <View style={styles.brand}>
-            {c.logo ? <Image style={styles.logo} src={c.logo} /> : null}
+            {logoOk ? <Image style={styles.logo} src={c.logo} /> : null}
             <Text style={styles.companyName}>{c.name || 'Your Company'}</Text>
             {companyLines.map((line, i) => (
               <Text key={i} style={styles.muted}>
@@ -172,20 +175,26 @@ export function InvoiceDocument({ invoice }: { invoice: Invoice }) {
         </View>
 
         <View style={styles.table}>
-          <View style={styles.th}>
+          <View style={styles.th} fixed>
             <Text style={[styles.colDesc, styles.thText]}>DESCRIPTION</Text>
             <Text style={[styles.colQty, styles.thText]}>QTY</Text>
             <Text style={[styles.colPrice, styles.thText]}>UNIT PRICE</Text>
             <Text style={[styles.colAmount, styles.thText]}>AMOUNT</Text>
           </View>
-          {invoice.items.map((it) => (
-            <View key={it.id} style={styles.tr} wrap={false}>
-              <Text style={styles.colDesc}>{it.description || '—'}</Text>
-              <Text style={styles.colQty}>{it.quantity}</Text>
-              <Text style={styles.colPrice}>{money(it.unitPrice)}</Text>
-              <Text style={styles.colAmount}>{money(lineTotal(it))}</Text>
+          {invoice.items.length === 0 ? (
+            <View style={styles.tr}>
+              <Text style={[styles.colDesc, { color: COLORS.muted }]}>No items yet.</Text>
             </View>
-          ))}
+          ) : (
+            invoice.items.map((it) => (
+              <View key={it.id} style={styles.tr} wrap={false}>
+                <Text style={styles.colDesc}>{it.description || '—'}</Text>
+                <Text style={styles.colQty}>{it.quantity}</Text>
+                <Text style={styles.colPrice}>{money(it.unitPrice)}</Text>
+                <Text style={styles.colAmount}>{money(lineTotal(it))}</Text>
+              </View>
+            ))
+          )}
         </View>
 
         <View style={styles.totals}>

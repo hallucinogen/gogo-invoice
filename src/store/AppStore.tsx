@@ -5,6 +5,8 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
+  useState,
   type ReactNode,
 } from 'react'
 import type { AppData, Company, Invoice, Theme } from '../types'
@@ -66,6 +68,7 @@ export interface Store {
   companies: Company[]
   invoices: Invoice[]
   theme: Theme
+  saveError: boolean
   getCompany: (id: string) => Company | undefined
   getInvoice: (id: string) => Invoice | undefined
   addCompany: (company: Company) => void
@@ -83,10 +86,17 @@ const StoreContext = createContext<Store | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [data, dispatch] = useReducer(reducer, undefined, loadData)
+  const [saveError, setSaveError] = useState(false)
+  const isInitialLoad = useRef(true)
 
-  // Persist on every change.
+  // Persist on change — but skip the first run, which would just echo the data
+  // we just loaded back to storage (twice under StrictMode).
   useEffect(() => {
-    saveData(data)
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false
+      return
+    }
+    setSaveError(!saveData(data))
   }, [data])
 
   // Apply the theme to <html data-theme="...">, tracking the OS setting when on "system".
@@ -120,6 +130,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       companies: data.companies,
       invoices: data.invoices,
       theme: data.settings.theme,
+      saveError,
       getCompany,
       getInvoice,
       addCompany: (company) => dispatch({ type: 'ADD_COMPANY', company }),
@@ -132,7 +143,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       replaceData: (next) => dispatch({ type: 'REPLACE_DATA', data: next }),
       clearAll: () => dispatch({ type: 'CLEAR_ALL' }),
     }),
-    [data, getCompany, getInvoice],
+    [data, saveError, getCompany, getInvoice],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

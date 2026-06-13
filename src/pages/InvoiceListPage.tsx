@@ -20,6 +20,7 @@ export default function InvoiceListPage() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
   const [companyFilter, setCompanyFilter] = useState('all')
+  const [notice, setNotice] = useState('')
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -39,49 +40,42 @@ export default function InvoiceListPage() {
       )
   }, [invoices, query, companyFilter])
 
-  const hasCompanies = companies.length > 0
-
   const onDelete = (inv: Invoice) => {
     if (window.confirm(`Delete invoice ${inv.number}? This cannot be undone.`)) {
       deleteInvoice(inv.id)
     }
   }
 
+  const onDownload = (inv: Invoice) => {
+    setNotice('Preparing PDF…')
+    downloadInvoicePdf(inv)
+      .then(() => setNotice(''))
+      .catch(() => setNotice('Could not generate PDF.'))
+  }
+
   return (
     <div>
       <div className="page-head">
-        <h1>Invoices</h1>
+        <h1>History</h1>
         <span className="nav-spacer" />
-        {hasCompanies ? (
-          <Link to="/invoice/new" className="btn btn--primary">
-            <PlusIcon className="btn-icon" /> New invoice
-          </Link>
-        ) : (
-          <Link to="/companies" className="btn btn--primary">
-            <PlusIcon className="btn-icon" /> Add a company first
-          </Link>
-        )}
+        {notice ? <span className="tag">{notice}</span> : null}
+        <Link to="/" className="btn btn--primary">
+          <PlusIcon className="btn-icon" /> New invoice
+        </Link>
       </div>
 
       {invoices.length === 0 ? (
         <div className="empty">
           <FileIcon className="empty-icon" />
-          <h2>No invoices yet</h2>
+          <h2>No saved invoices yet</h2>
           <p>
-            {hasCompanies
-              ? 'Create your first invoice — it is saved on this device and shows up here.'
-              : 'Start by adding a company (your invoice header), then create an invoice.'}
+            Fill in an invoice and hit Save — it shows up here so you can revisit or copy
+            it.
           </p>
           <div style={{ marginTop: 16 }}>
-            {hasCompanies ? (
-              <Link to="/invoice/new" className="btn btn--primary">
-                <PlusIcon className="btn-icon" /> New invoice
-              </Link>
-            ) : (
-              <Link to="/companies" className="btn btn--primary">
-                <PlusIcon className="btn-icon" /> Add a company
-              </Link>
-            )}
+            <Link to="/" className="btn btn--primary">
+              <PlusIcon className="btn-icon" /> Create an invoice
+            </Link>
           </div>
         </div>
       ) : (
@@ -101,6 +95,7 @@ export default function InvoiceListPage() {
                 className="input"
                 style={{ paddingLeft: 36 }}
                 placeholder="Search number, client or company…"
+                aria-label="Search invoices"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -108,6 +103,7 @@ export default function InvoiceListPage() {
             {companies.length > 1 ? (
               <select
                 className="select"
+                aria-label="Filter by company"
                 value={companyFilter}
                 onChange={(e) => setCompanyFilter(e.target.value)}
               >
@@ -166,7 +162,7 @@ export default function InvoiceListPage() {
                         className="btn btn--ghost btn--sm"
                         title="Download PDF"
                         aria-label={`Download PDF for ${inv.number}`}
-                        onClick={() => downloadInvoicePdf(inv)}
+                        onClick={() => onDownload(inv)}
                       >
                         <DownloadIcon className="btn-icon" />
                       </button>

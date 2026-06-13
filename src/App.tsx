@@ -1,7 +1,7 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
-import InvoiceListPage from './pages/InvoiceListPage'
 import InvoiceEditorPage from './pages/InvoiceEditorPage'
+import InvoiceListPage from './pages/InvoiceListPage'
 import CompaniesPage from './pages/CompaniesPage'
 import DataPage from './pages/DataPage'
 
@@ -10,9 +10,11 @@ export default function App() {
     <HashRouter>
       <Layout>
         <Routes>
-          <Route path="/" element={<InvoiceListPage />} />
+          {/* Land straight on a fillable invoice. */}
+          <Route path="/" element={<InvoiceEditorPage />} />
           <Route path="/invoice/new" element={<InvoiceEditorPage />} />
           <Route path="/invoice/:id" element={<InvoiceEditorPage />} />
+          <Route path="/history" element={<InvoiceListPage />} />
           <Route path="/companies" element={<CompaniesPage />} />
           <Route path="/data" element={<DataPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -13,9 +13,13 @@ and copy from, and JSON backup/restore.
 
 ## Features
 
-- 🏢 **Multiple companies / headers** — keep separate sender profiles (logo, address,
-  tax ID, bank details, default currency and its own invoice-number series). Pick one
-  per invoice. Perfect for running invoices for more than one business.
+- ✍️ **Fill it in place (WYSIWYG)** — the app opens directly on a ready-to-fill
+  invoice. Click anything on the page — company name, logo, address, line items,
+  dates, tax, notes — and edit it inline. What you see is exactly what the PDF prints.
+- 🏢 **Multiple companies / headers** — starts with a default **"Personal"** company so
+  there's zero setup. Add more sender profiles (logo, address, tax ID, bank details,
+  default currency and their own invoice-number series) and switch per invoice. Only
+  the company name is required — everything else is optional.
 - 🧾 **Full invoices** — line items, percentage **or** fixed discount, configurable
   tax (label + rate), shipping, notes and terms, plus draft / sent / paid status.
 - 🔢 **Auto invoice numbering** per company with a custom prefix and zero-padding —
@@ -26,7 +30,6 @@ and copy from, and JSON backup/restore.
   company. Re-open, edit, or **duplicate** an old one to start a new invoice in seconds.
 - 📄 **PDF export** — download a clean, print-ready A4 PDF generated entirely in the
   browser (via `@react-pdf/renderer`).
-- 👀 **Live preview** — see the invoice update as you type.
 - 💾 **Backup & restore** — export all your data to a single JSON file and import it
   on another browser or computer.
 - 🌙 **Dark mode** — light / dark / follow-system.
@@ -80,11 +83,10 @@ and deploys `dist/` to GitHub Pages.
 ```
 src/
   lib/        calculations, currency/date formatting, factories, ids
-  store/      localStorage persistence + React store (context + reducer)
+  store/      localStorage persistence (validated, resilient) + React store
   pdf/        the @react-pdf/renderer document + lazy download helper
-  preview/    on-screen invoice preview (mirrors the PDF)
-  components/ layout, theme toggle, form field, icons
-  pages/      Invoices (history), Editor, Companies, Backup
+  components/ layout, inline-editable fields, theme toggle, icons
+  pages/      Editor (the WYSIWYG invoice), History, Companies, Backup
 ```
 
 ## License

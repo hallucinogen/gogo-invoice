@@ -1,12 +1,19 @@
 import { format as formatDateFns, parseISO } from 'date-fns'
 
-/** Format a money amount with the currency symbol and locale grouping. */
+/**
+ * Format a money amount with the currency code (e.g. "USD 1,234.50").
+ * We use the ISO code rather than the symbol because the PDF is rendered with
+ * the built-in Helvetica font, which has no glyph for several currency symbols
+ * (₹ ฿ ₫ ₩ ₱). Using the code keeps the on-screen preview and the exported PDF
+ * identical for every supported currency.
+ */
 export function formatCurrency(amount: number, currency: string): string {
   const value = Number.isFinite(amount) ? amount : 0
   try {
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
       currency,
+      currencyDisplay: 'code',
     }).format(value)
   } catch {
     return `${currency} ${value.toFixed(2)}`
@@ -21,11 +28,4 @@ export function formatDate(value: string): string {
   } catch {
     return value
   }
-}
-
-/** Parse a possibly-messy numeric input into a finite number (or 0). */
-export function toNumber(value: string | number): number {
-  if (typeof value === 'number') return Number.isFinite(value) ? value : 0
-  const n = parseFloat(value)
-  return Number.isFinite(n) ? n : 0
 }

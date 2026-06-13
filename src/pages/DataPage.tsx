@@ -25,14 +25,16 @@ export default function DataPage() {
     const reader = new FileReader()
     reader.onload = () => {
       try {
-        const next = parseBackup(String(reader.result))
+        const { data: next, dropped } = parseBackup(String(reader.result))
+        const droppedNote =
+          dropped > 0 ? ` (${dropped} unreadable record(s) skipped)` : ''
         const ok = window.confirm(
-          `Restore ${next.companies.length} company(ies) and ${next.invoices.length} invoice(s)? ` +
+          `Restore ${next.companies.length} company(ies) and ${next.invoices.length} invoice(s)${droppedNote}? ` +
             'This replaces everything currently stored on this device.',
         )
         if (ok) {
           replaceData(next)
-          setMsg({ kind: 'ok', text: 'Backup restored successfully.' })
+          setMsg({ kind: 'ok', text: `Backup restored successfully.${droppedNote}` })
         }
       } catch {
         setMsg({ kind: 'err', text: 'That file is not a valid Gogo Invoice backup.' })
@@ -72,6 +74,7 @@ export default function DataPage() {
         <div
           className={`note-banner ${msg.kind === 'err' ? 'danger-banner' : ''}`}
           style={{ marginBottom: 18 }}
+          role="status"
         >
           {msg.text}
         </div>
@@ -108,7 +111,7 @@ export default function DataPage() {
           <input
             type="file"
             accept="application/json,.json"
-            hidden
+            className="sr-only-input"
             onChange={importBackup}
           />
         </label>

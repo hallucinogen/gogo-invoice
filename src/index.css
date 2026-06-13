@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --primary: #4f46e5;
   --primary-hover: #4338ca;
   --primary-contrast: #ffffff;
@@ -11,12 +12,12 @@
   --border-strong: #cbd2e0;
   --text: #1a1d29;
   --text-muted: #6b7280;
-  --text-faint: #9aa1b0;
+  --text-faint: #666d7c;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
-  --success: #16a34a;
+  --success: #15803d;
   --success-soft: #f0fdf4;
-  --warning: #d97706;
+  --warning: #b45309;
   --warning-soft: #fffbeb;
 
   --radius: 12px;
@@ -30,6 +31,7 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --primary: #818cf8;
   --primary-hover: #6366f1;
   --primary-contrast: #0b1020;
@@ -42,7 +44,7 @@
   --border-strong: #36405c;
   --text: #e8eaf2;
   --text-muted: #9aa3b8;
-  --text-faint: #6b7488;
+  --text-faint: #7e8aa3;
   --danger: #f87171;
   --danger-soft: #2a1517;
   --success: #4ade80;
@@ -191,9 +193,11 @@ h3 {
     transform 0.05s,
     box-shadow 0.15s;
   white-space: nowrap;
+  text-decoration: none;
 }
 .btn:hover {
   background: var(--surface-2);
+  text-decoration: none;
 }
 .btn:active {
   transform: translateY(1px);
@@ -629,7 +633,7 @@ h3 {
 .paper__title h1 {
   font-size: 30px;
   letter-spacing: 0.08em;
-  color: var(--primary);
+  color: #4f46e5;
   margin: 0 0 6px;
 }
 .paper__meta-row {
@@ -705,7 +709,7 @@ h3 {
   padding-top: 9px;
   font-weight: 800;
   font-size: 15px;
-  color: var(--primary);
+  color: #4f46e5;
 }
 .paper__notes {
   margin-top: 26px;
@@ -767,4 +771,358 @@ h3 {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+/* ---------- Accessibility utilities ---------- */
+.sr-only-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.btn:has(.sr-only-input:focus-visible),
+.logo-slot:has(.sr-only-input:focus-visible) {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.save-error {
+  width: 100%;
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-bottom: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  padding: 10px 20px;
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+.advanced {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.advanced summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary);
+  list-style: none;
+}
+.advanced summary::-webkit-details-marker {
+  display: none;
+}
+.advanced summary::before {
+  content: '▸ ';
+}
+.advanced[open] summary::before {
+  content: '▾ ';
+}
+
+/* ---------- WYSIWYG editor ---------- */
+.editor-page {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.doc-toolbar {
+  position: sticky;
+  top: 60px;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 16px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.doc-toolbar__field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.doc-toolbar__field .select {
+  width: auto;
+  min-width: 130px;
+  font-size: 0.85rem;
+  padding: 7px 30px 7px 10px;
+}
+
+.paper--edit {
+  box-shadow: var(--shadow-lg);
+  color-scheme: light;
+}
+
+/* Seamless inline-edit fields that read as plain invoice text. */
+.editable {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 2px 5px;
+  width: 100%;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
+}
+.editable:hover {
+  background: rgba(79, 70, 229, 0.06);
+}
+.editable:focus {
+  outline: none;
+  background: #fff8e1;
+  border-color: rgba(79, 70, 229, 0.4);
+}
+.editable::placeholder {
+  color: #aeb4c0;
+}
+.editable--area {
+  resize: none;
+  overflow: hidden;
+  display: block;
+  line-height: 1.45;
+}
+
+/* Header */
+.paper__sender {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 2px;
+}
+.paper__meta-grid {
+  display: grid;
+  grid-template-columns: auto minmax(110px, 150px);
+  gap: 4px 8px;
+  align-items: center;
+  justify-content: end;
+  margin-top: 6px;
+}
+.paper__meta-grid .label {
+  color: #6b7280;
+  font-size: 12px;
+  text-align: right;
+}
+.paper__meta-val {
+  font-weight: 700;
+  text-align: right;
+}
+.paper__date {
+  font: inherit;
+  font-size: 12px;
+  color: #1a1d29;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 4px;
+  padding: 2px 4px;
+  text-align: right;
+  width: 100%;
+}
+.paper__date:hover {
+  background: rgba(79, 70, 229, 0.06);
+}
+.paper__date:focus {
+  outline: none;
+  background: #fff8e1;
+  border-color: rgba(79, 70, 229, 0.4);
+}
+.paper__client-name {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+/* Logo slot */
+.logo-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+  min-height: 46px;
+  max-width: 180px;
+  border: 1px dashed #cbd2e0;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  padding: 6px;
+  color: #9aa1b0;
+  font-size: 12px;
+}
+.logo-slot--has {
+  border-style: solid;
+  border-color: #ececf1;
+}
+.logo-slot img {
+  max-width: 160px;
+  max-height: 64px;
+  object-fit: contain;
+  display: block;
+}
+.logo-slot:hover {
+  background: #faf9ff;
+  border-color: #a5b4fc;
+}
+.logo-remove {
+  display: block;
+  border: none;
+  background: transparent;
+  color: #9aa1b0;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0 0 6px;
+  text-decoration: underline;
+}
+.logo-remove:hover {
+  color: #dc2626;
+}
+.logo-err {
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+/* Items */
+.paper__items {
+  margin-top: 18px;
+}
+.paper__items-head,
+.paper__items-row {
+  display: grid;
+  grid-template-columns: 1fr 56px 96px 116px 24px;
+  gap: 8px;
+  align-items: center;
+}
+.paper__items-head {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  font-weight: 700;
+  border-bottom: 2px solid #e3e6ee;
+  padding-bottom: 6px;
+}
+.paper__items-row {
+  border-bottom: 1px solid #eef0f5;
+  padding: 2px 0;
+}
+.paper__items-head .r,
+.paper__items-row .r {
+  text-align: right;
+}
+.paper__items-row .amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  padding-right: 5px;
+  color: #1a1d29;
+}
+.row-remove {
+  border: none;
+  background: transparent;
+  color: #c0c4cf;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+.paper__items-row:hover .row-remove,
+.row-remove:focus-visible {
+  opacity: 1;
+}
+.row-remove:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+.add-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  border: 1px dashed #cbd2e0;
+  background: transparent;
+  color: #4f46e5;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.add-item:hover {
+  background: #f5f3ff;
+}
+
+/* Totals adjustments */
+.paper__totals-line.adj {
+  align-items: center;
+}
+.adj-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #6b7280;
+}
+.adj-input {
+  width: 70px;
+  text-align: right;
+  border: 1px solid #e3e6ee;
+  border-radius: 4px;
+  background: #fff;
+}
+.adj-tax-label {
+  width: 54px;
+  color: #6b7280;
+}
+.adj-suffix {
+  color: #6b7280;
+}
+.mini-select {
+  font: inherit;
+  font-size: 12px;
+  color: #6b7280;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 2px;
+}
+.totals-adders {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+.totals-adders button {
+  border: none;
+  background: transparent;
+  color: #4f46e5;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.totals-adders button:hover {
+  background: #f5f3ff;
+}
+
+/* Notes (editable) */
+.paper__notes .editable {
+  color: #4b5563;
+  font-size: 12px;
 }
